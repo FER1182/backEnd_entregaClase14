@@ -12,8 +12,8 @@ app.use(express.urlencoded({extended:false}))//para decodificar la url .
 
 app.set("view engine" ,"ejs")
 app.set("views","./views")
-app.use("/api",productosRoutes);
-app.use("/api",cartsRoutes);
+app.use("/api/productos",productosRoutes);
+app.use("/api/cart",cartsRoutes);
 
 
 app.listen(8080,()=>{

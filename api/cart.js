@@ -4,13 +4,36 @@ const Contenedor = require("./contenedor");
 const multer = require("multer");
 
 let router = new Router();
-let archivo = new Contenedor("text.json");
+let carrito = new Contenedor("cart.json");
+let prod = new Contenedor("text.json");
 
-router.get("/cart", async (req, res) => {
-  let data = await archivo.getAll();
-   
-  //  res.render("./partials/portada",{titulo:"QUE ME VAYA BIEN"})
-  res.render("index", { data: data });
+const elapsed = Date.now();
+const hoy = new Date(elapsed)
+const diaHoy= hoy.toLocaleDateString()
+
+router.post("/", (req, res) => {
+  if (req.query.admin) {
+    let newCarrito = {
+      time: diaHoy,
+      productos : [],
+    };
+    let idCarritoAgregado = carrito.save(newCarrito);
+    alert(`se guardo el carrito con id numero ${idCarritoAgregado}`)
+    res.render("cart");
+  } else {
+    res.send("error no esta autorizado apra acceder");
+  }
+});
+
+router.delete("/:id", async (req, res) => {
+  let data = await archivo.deleteById(req.params.id);
+  res.json(data);
+  //res.send(productos);
+});
+
+router.get("/:id/productos", async (req, res) => {
+  let data = await carrito.getAll();
+  res.render("cart", { data: data });
 });
 
 let storage = multer.diskStorage({
@@ -28,45 +51,44 @@ router.get("/form",(req,res)=>{
   res.render("form")
 })
 
+//************/
+/************/
+/* SUMAR ARTICULOS AL CARRITO */
 
-router.post("/form", upload.single("myfile"), (req, res) => {
-  /* let file = req.file;
-  if (!file) {
-    res.status(400).send({ message: "Error al cargar" });
-  } */
-  let newProduct = {
-    name: req.body.name,
-    price: req.body.price,
-    urlFoto: req.body.urlFoto,
-  };
- 
-  let idProductoAgregado = archivo.save(newProduct);
- // res.send(
- //   `El archivo se guardo correctamente y el id del nuevo productos es ${idProductoAgregado}`
- // );
-  res.render("form")
+router.post("/:id/productos/:idCarrito", (req, res) => {
+  let data = prod.getAll();
+  res.render("index", { data: data });
+  let objSelect= data.find(x=>{
+    return x.id === req.params.id
+  })
+
+  let carro = carrito.getAll
+  let carSelect= carro.find(x=>{
+    return x.id === req.params.id
+  })
+  carSelect.productos.push(objSelect)
+  
+  carrito.save(carSelect)
+
 });
 
-router.get("/:id", async (req, res) => {
-  let data = await archivo.getById(req.params.id);
-  res.json(data);
+//************/
+/************/
+/* ELIMINAR ARTICULOS DEL CARRITO */
+
+router.delete("/:id/productos/:id_prod", async (req, res) => {
+  let carro = carrito.getAll
+  let carSelect= carro.find(x=>{
+    return x.id === req.params.id
+  })
+
+  let newProductCarro = carSelect.productos.filter(el=> el.id !==id)
+  carSelect.productos = newProductCarro
+  carrito.save(carSelect);
+  
 });
 
-router.delete("/:id", async (req, res) => {
-  let data = await archivo.deleteById(req.params.id);
-  res.json(data);
-  //res.send(productos);
-});
 
-router.put("/:id", async (req, res) => {
-  let newProduct = {
-    name: req.body.name,
-    price: req.body.price,
-    img: req.body.img,
-  };
 
-  let data = await archivo.putById(req.params.id, newProduct);
-  res.json(data);
-});
 
 module.exports = router;
